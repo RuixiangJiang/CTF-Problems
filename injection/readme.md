@@ -1,0 +1,1 @@
+Input Username = `admin' --` and an arbitrary password, you will get the flag.

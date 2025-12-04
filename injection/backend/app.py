@@ -4,12 +4,12 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # allow cross-origin requests from GitHub Pages
+CORS(app)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 
-FLAG = os.getenv("FLAG", "flag{test_sqli_flag_for_local_debug}")
+FLAG = os.getenv("FLAG", "flag{ruixiang}")
 
 
 def get_db_connection():
@@ -23,8 +23,7 @@ def init_db():
     cur = conn.cursor()
 
     # Create users table
-    cur.execute(
-        """
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
@@ -32,26 +31,21 @@ def init_db():
             is_admin INTEGER NOT NULL DEFAULT 0,
             flag TEXT
         );
-        """
-    )
+        """)
 
     # Insert a normal user if not exist
-    cur.execute(
-        "SELECT id FROM users WHERE username = 'user';"
-    )
+    cur.execute("SELECT id FROM users WHERE username = 'user';")
     if cur.fetchone() is None:
         cur.execute(
             "INSERT INTO users (username, password, is_admin) VALUES ('user', 'userpass', 0);"
         )
 
     # Insert admin user if not exist
-    cur.execute(
-        "SELECT id FROM users WHERE username = 'admin';"
-    )
+    cur.execute("SELECT id FROM users WHERE username = 'admin';")
     if cur.fetchone() is None:
         cur.execute(
             "INSERT INTO users (username, password, is_admin, flag) VALUES ('admin', 'supersecret_admin_password', 1, ?);",
-            (FLAG,),
+            (FLAG, ),
         )
 
     conn.commit()
@@ -81,7 +75,6 @@ def login():
         LIMIT 1;
     """
 
-    # For debugging / CTF hint you can print this to server logs
     print("[DEBUG] Executing query:", query)
 
     conn = get_db_connection()
@@ -97,7 +90,10 @@ def login():
     conn.close()
 
     if row is None:
-        return jsonify({"status": "fail", "message": "Invalid username or password."}), 401
+        return jsonify({
+            "status": "fail",
+            "message": "Invalid username or password."
+        }), 401
 
     username_db = row["username"]
     is_admin = row["is_admin"]
@@ -105,20 +101,18 @@ def login():
 
     if is_admin:
         # Admin login — expose flag
-        return jsonify(
-            {
-                "status": "ok",
-                "message": f"Welcome, {username_db}! Here is your flag.",
-                "flag": flag_value,
-            }
-        )
+        return jsonify({
+            "status": "ok",
+            "message": f"Welcome, {username_db}! Here is your flag.",
+            "flag": flag_value,
+        })
     else:
-        return jsonify(
-            {
-                "status": "ok",
-                "message": f"Welcome, {username_db}! But you are not admin.",
-            }
-        )
+        return jsonify({
+            "status":
+            "ok",
+            "message":
+            f"Welcome, {username_db}! But you are not admin.",
+        })
 
 
 if __name__ == "__main__":
