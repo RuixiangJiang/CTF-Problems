@@ -93,7 +93,7 @@ function httpPostJson(path, jsonBody) {
 
     // 4) Login with leaked credentials
     const loginResp = await httpPostJson("/login", {
-      username: "superadmin",
+      username: "admin",
       password: "Very_Strong_Admin_Password_9fc1e2",
     });
 
