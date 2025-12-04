@@ -9,8 +9,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ====== Configuration (intended secure part) ======
-let ADMIN_USER = process.env.ADMIN_USER || "admin";
-let ADMIN_PASS = process.env.ADMIN_PASS || "qwertyuiop[]";
+let ADMIN_USER = process.env.ADMIN_USER;
+let ADMIN_PASS = process.env.ADMIN_PASS;
 const FLAG = "flag{ruixiang}";
 
 // Try to load backup config (simulating careless admin using it locally)

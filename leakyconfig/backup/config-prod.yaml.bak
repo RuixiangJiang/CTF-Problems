@@ -4,11 +4,7 @@
 env: production
 
 admin:
-  username: superadmin
+  username: admin
   password: Very_Strong_Admin_Password_9fc1e2
 
-database:
-  host: 127.0.0.1
-  port: 5432
-  user: app_user
-  password: do_not_reuse_this_password
+flag: flag{ruixiang}
