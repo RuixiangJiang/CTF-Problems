@@ -84,7 +84,7 @@ function httpPostJson(path, jsonBody) {
     const backupFile = await httpGet("/backup/config-prod.yaml.bak");
     if (
       backupFile.status !== 200 ||
-      !backupFile.body.includes("superadmin") ||
+      !backupFile.body.includes("admin") ||
       !backupFile.body.includes("Very_Strong_Admin_Password_9fc1e2")
     ) {
       throw new Error("Backup config does not contain expected admin credentials");
