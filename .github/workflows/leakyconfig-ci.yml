@@ -20,8 +20,10 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
+      - name: Install dependencies (leakyconfig)
+        working-directory: ./leakyconfig
         run: npm install
 
-      - name: Run tests (spin up server and verify challenge)
+      - name: Run tests for leakyconfig challenge
+        working-directory: ./leakyconfig
         run: npm test
