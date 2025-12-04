@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Login</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 480px;
+      margin: 60px auto;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin: 6px 0;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 8px 16px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    #msg {
+      margin-top: 16px;
+      font-size: 0.95em;
+    }
+    .hint {
+      margin-top: 32px;
+      font-size: 0.85em;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <h1>Admin Panel</h1>
+  <p>Please log in to access the admin area.</p>
+
+  <div>
+    <label>Username</label><br />
+    <input id="username" type="text" placeholder="admin" />
+  </div>
+  <div>
+    <label>Password</label><br />
+    <input id="password" type="password" placeholder="••••••••" />
+  </div>
+  <button onclick="login()">Log In</button>
+
+  <div id="msg"></div>
+
+  <div class="hint">
+    <p>The administrator said they keep a “very secure” configuration file for production.</p>
+    <p>“Don’t worry, the config is only for internal use,” they said.</p>
+  </div>
+
+  <script>
+    async function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const msg = document.getElementById("msg");
+      msg.textContent = "Logging in...";
+
+      try {
+        const resp = await fetch("/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await resp.json();
+        if (resp.ok && data.ok) {
+          msg.textContent = data.message + " (Visit /admin)";
+        } else {
+          msg.textContent = data.message || "Login failed.";
+        }
+      } catch (err) {
+        msg.textContent = "Error: " + err;
+      }
+    }
+  </script>
+</body>
+</html>

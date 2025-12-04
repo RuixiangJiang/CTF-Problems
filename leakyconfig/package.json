@@ -1,0 +1,16 @@
+{
+  "name": "leaky-config-pro",
+  "version": "1.0.0",
+  "description": "CTF challenge: Leaky Config with exposed backup file",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "express": "^4.19.2",
+    "serve-index": "^1.9.1",
+    "yaml": "^2.5.0"
+  }
+}
