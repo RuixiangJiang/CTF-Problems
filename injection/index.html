@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CTF - Medium SQL Injection Challenge</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Medium SQL Injection Challenge</h1>
+
+    <div class="description">
+      <p>
+        Your goal: log in as <code>admin</code> and get the flag.
+      </p>
+      <p>
+        The backend is a vulnerable login system using SQLite.
+        You don't know the admin password.
+      </p>
+      <p>
+        Known information (leaked by a careless developer):
+      </p>
+      <pre>
+Table: users
+Columns:
+  id        INTEGER PRIMARY KEY
+  username  TEXT
+  password  TEXT
+  is_admin  INTEGER (0 or 1)
+  flag      TEXT (only for admin)
+      </pre>
+      <p>
+        Try typical SQL injection payloads in the username / password fields
+        to bypass the login and become admin.
+      </p>
+    </div>
+
+    <form id="login-form">
+      <label>
+        Username:
+        <input type="text" id="username" name="username" autocomplete="off" />
+      </label>
+      <label>
+        Password:
+        <input type="password" id="password" name="password" autocomplete="off" />
+      </label>
+      <button type="submit">Login</button>
+    </form>
+
+    <div id="result" class="result"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
