@@ -59,8 +59,11 @@
   </div>
 
   <script>
-    // Flag is only shown after correct login
-    const FLAG = "flag{leaky_backup_config_exposes_admin_panel}";
+    // Encrypted flag bytes (XOR of flag chars with password chars)
+    // The plaintext flag never appears in this file.
+    const cipher = [
+      48, 9, 19, 30, 36, 33, 1, 27, 23, 7, 6, 49, 38, 25
+    ];
 
     let configUser = null;
     let configPass = null;
@@ -86,6 +89,18 @@
       }
     }
 
+    function deriveFlagFromPassword(password) {
+      if (!password) return null;
+      const chars = [];
+      const plen = password.length;
+      for (let i = 0; i < cipher.length; i++) {
+        const key = password.charCodeAt(i % plen);
+        const ch = String.fromCharCode(cipher[i] ^ key);
+        chars.push(ch);
+      }
+      return chars.join("");
+    }
+
     async function login() {
       const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value.trim();
@@ -98,9 +113,10 @@
       }
 
       if (username === configUser && password === configPass) {
+        const flag = deriveFlagFromPassword(password) || "flag not available";
         msg.innerHTML =
           "Welcome, admin.<br><br>Here is your flag:<br><pre>" +
-          FLAG +
+          flag +
           "</pre>";
       } else {
         msg.textContent = "Invalid username or password.";
