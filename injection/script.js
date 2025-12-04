@@ -1,4 +1,4 @@
-const API_BASE = "http://172.31.77.66:5000";
+const API_BASE = "https://b5478502-7dfb-497b-9ece-f64984d10534-00-gfc74smfby69.picard.replit.dev";
 
 async function handleLogin(event) {
   event.preventDefault();
