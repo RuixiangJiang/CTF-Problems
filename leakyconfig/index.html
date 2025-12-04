@@ -59,10 +59,11 @@
   </div>
 
   <script>
-    let configText = "";
+    // Flag is only shown after correct login
+    const FLAG = "flag{leaky_backup_config_exposes_admin_panel}";
+
     let configUser = null;
     let configPass = null;
-    let flagValue = null;
 
     async function loadConfig() {
       try {
@@ -71,15 +72,13 @@
           console.warn("Cannot load backup config:", resp.status);
           return;
         }
-        configText = await resp.text();
+        const text = await resp.text();
         // Very simple parsing by regex – enough for CTF.
-        const uMatch = configText.match(/username:\s*([^\s]+)/);
-        const pMatch = configText.match(/password:\s*([^\s]+)/);
-        const fMatch = configText.match(/flag:\s*([^\s]+)/);
+        const uMatch = text.match(/username:\s*([^\s]+)/);
+        const pMatch = text.match(/password:\s*([^\s]+)/);
 
         configUser = uMatch ? uMatch[1] : null;
         configPass = pMatch ? pMatch[1] : null;
-        flagValue = fMatch ? fMatch[1] : null;
 
         console.log("Config loaded from backup.");
       } catch (e) {
@@ -101,7 +100,7 @@
       if (username === configUser && password === configPass) {
         msg.innerHTML =
           "Welcome, admin.<br><br>Here is your flag:<br><pre>" +
-          (flagValue || "flag not found in config") +
+          FLAG +
           "</pre>";
       } else {
         msg.textContent = "Invalid username or password.";
