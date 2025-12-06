@@ -1,0 +1,16 @@
+{
+  "name": "signed-but-not-safe",
+  "version": "1.0.0",
+  "description": "CTF challenge: Software and Data Integrity Failures via incorrect JWT verification and unsafe plugin loader.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "body-parser": "^1.20.3",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

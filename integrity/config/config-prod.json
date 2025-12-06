@@ -1,0 +1,5 @@
+{
+  "name": "signed-but-not-safe",
+  "env": "production",
+  "note": "This file is here only to look like a real production config. It is not strictly required by the test."
+}
