@@ -15,13 +15,16 @@ const publicKey = fs.readFileSync(
 );
 
 /**
- * Verify the update token and fetch the remote manifest JSON.
+ * Verify the update token and obtain the manifest.
  *
- * Expected payload:
- * {
- *   "repoUrl": "http://127.0.0.1:5001/manifest.json",
- *   "exp": 1735660800
- * }
+ * Two modes:
+ *  1) Inline manifest:
+ *     payload = { manifest: { ... }, exp: ... }
+ *     In this case we directly return payload.manifest.
+ *
+ *  2) Remote manifest URL:
+ *     payload = { repoUrl: "http://...", exp: ... }
+ *     In this case we fetch the manifest from repoUrl via HTTP(S).
  *
  * VULNERABILITY:
  *  - The code uses HS256 (HMAC with symmetric key).
@@ -35,9 +38,15 @@ async function verifyAndFetchManifest(updateToken) {
       algorithms: ['HS256']
     });
 
+    // Mode 1: inline manifest directly inside the token.
+    if (payload.manifest && typeof payload.manifest === 'object') {
+      return payload.manifest;
+    }
+
+    // Mode 2: fetch manifest from remote URL.
     const manifestUrl = payload.repoUrl;
 
-    // IMPORTANT: allow http for local testing & GitHub Actions
+    // For the challenge, we allow both http and https so tests can use localhost.
     if (
       typeof manifestUrl !== 'string' ||
       (!manifestUrl.startsWith('http://') &&
@@ -60,6 +69,18 @@ async function verifyAndFetchManifest(updateToken) {
 
 /**
  * Apply the manifest by loading and executing plugin files.
+ *
+ * Expected manifest structure:
+ * {
+ *   "version": 1,
+ *   "plugins": [
+ *     { "name": "hello", "entry": "hello.js" }
+ *   ]
+ * }
+ *
+ * VULNERABILITY:
+ *  - Plugins are executed in a powerful vm context with access to require() and process.
+ *  - Once integrity is broken, an attacker-controlled plugin can achieve arbitrary code execution.
  */
 async function applyManifest(manifest) {
   const vm = require('vm');
