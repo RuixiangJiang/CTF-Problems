@@ -37,7 +37,7 @@ async function verifyAndFetchManifest(updateToken) {
 
     const manifestUrl = payload.repoUrl;
 
-    // For the challenge, we allow both http and https so tests can use localhost.
+    // IMPORTANT: allow http for local testing & GitHub Actions
     if (
       typeof manifestUrl !== 'string' ||
       (!manifestUrl.startsWith('http://') &&
@@ -60,19 +60,6 @@ async function verifyAndFetchManifest(updateToken) {
 
 /**
  * Apply the manifest by loading and executing plugin files.
- *
- * Expected manifest structure:
- * {
- *   "version": 1,
- *   "plugins": [
- *     { "name": "hello", "entry": "hello.js" },
- *     { "name": "safe-render", "entry": "safe-render.js" }
- *   ]
- * }
- *
- * VULNERABILITY:
- *  - Plugins are executed in a powerful vm context with access to require() and process.
- *  - Once integrity is broken, an attacker-controlled plugin can achieve arbitrary code execution.
  */
 async function applyManifest(manifest) {
   const vm = require('vm');
