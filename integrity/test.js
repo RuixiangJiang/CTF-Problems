@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 const TARGET_PORT = 4000;
 
@@ -38,14 +39,17 @@ async function main() {
       console.log('Missing token correctly rejected');
     }
 
-    // 3) Forge a token using HS256 with the public key as the secret.
-    //    Here we put the manifest directly inside the token payload,
-    //    so the server does not need to fetch anything over HTTP.
-    console.log('Forging update token with inline manifest using public.pem as HS256 secret...');
-    const publicKey = fs.readFileSync(
+    // 3) Forge a token using HS256 with the same symmetric key
+    //    that the server derives from public.pem.
+    console.log(
+      'Forging update token with inline manifest using public.pem-derived HS256 key...'
+    );
+
+    const publicKeyPem = fs.readFileSync(
       path.join(__dirname, 'config', 'public.pem'),
       'utf8'
     );
+    const hmacKey = crypto.createHash('sha256').update(publicKeyPem).digest();
 
     const manifest = {
       version: 1,
@@ -57,7 +61,7 @@ async function main() {
       exp: Math.floor(Date.now() / 1000) + 3600
     };
 
-    const token = jwt.sign(payload, publicKey, {
+    const token = jwt.sign(payload, hmacKey, {
       algorithm: 'HS256'
     });
 

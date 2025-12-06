@@ -5,14 +5,22 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 const config = require('./config/config-prod.json');
 
-// This is actually an RSA public key, but will be misused as a symmetric secret.
-const publicKey = fs.readFileSync(
+// We load an RSA public key from public.pem.
+const publicKeyPem = fs.readFileSync(
   path.join(__dirname, 'config', 'public.pem'),
   'utf8'
 );
+
+// VULNERABILITY:
+// Instead of using a private key for RS256 or a truly secret HMAC key,
+// the server derives its HS256 key directly from the public key file.
+// Anyone who can read public.pem (e.g. source code is public) can compute
+// exactly the same HMAC key and forge valid tokens.
+const hmacKey = crypto.createHash('sha256').update(publicKeyPem).digest();
 
 /**
  * Verify the update token and obtain the manifest.
@@ -28,13 +36,12 @@ const publicKey = fs.readFileSync(
  *
  * VULNERABILITY:
  *  - The code uses HS256 (HMAC with symmetric key).
- *  - It incorrectly uses an RSA public key as the HMAC secret.
- *  - Since the public key is public, anyone can create a valid token.
+ *  - The symmetric key is derived from a public file (public.pem),
+ *    so it is not secret at all.
  */
 async function verifyAndFetchManifest(updateToken) {
   try {
-    const payload = jwt.verify(updateToken, publicKey, {
-      // Using a symmetric algorithm with a public key is a serious integrity failure.
+    const payload = jwt.verify(updateToken, hmacKey, {
       algorithms: ['HS256']
     });
 
@@ -46,7 +53,7 @@ async function verifyAndFetchManifest(updateToken) {
     // Mode 2: fetch manifest from remote URL.
     const manifestUrl = payload.repoUrl;
 
-    // For the challenge, we allow both http and https so tests can use localhost.
+    // Allow both http and https so the challenge can use localhost URLs.
     if (
       typeof manifestUrl !== 'string' ||
       (!manifestUrl.startsWith('http://') &&
