@@ -5,22 +5,9 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
+const { HMAC_KEY } = require('./secrets');
 
 const config = require('./config/config-prod.json');
-
-// We load an RSA public key from public.pem.
-const publicKeyPem = fs.readFileSync(
-  path.join(__dirname, 'config', 'public.pem'),
-  'utf8'
-);
-
-// VULNERABILITY:
-// Instead of using a private key for RS256 or a truly secret HMAC key,
-// the server derives its HS256 key directly from the public key file.
-// Anyone who can read public.pem (e.g. source code is public) can compute
-// exactly the same HMAC key and forge valid tokens.
-const hmacKey = crypto.createHash('sha256').update(publicKeyPem).digest();
 
 /**
  * Verify the update token and obtain the manifest.
@@ -28,25 +15,20 @@ const hmacKey = crypto.createHash('sha256').update(publicKeyPem).digest();
  * Two modes:
  *  1) Inline manifest:
  *     payload = { manifest: { ... }, exp: ... }
- *     In this case we directly return payload.manifest.
- *
  *  2) Remote manifest URL:
  *     payload = { repoUrl: "http://...", exp: ... }
- *     In this case we fetch the manifest from repoUrl via HTTP(S).
- *
- * VULNERABILITY:
- *  - The code uses HS256 (HMAC with symmetric key).
- *  - The symmetric key is derived from a public file (public.pem),
- *    so it is not secret at all.
  */
 async function verifyAndFetchManifest(updateToken) {
   try {
-    const payload = jwt.verify(updateToken, hmacKey, {
+    // IMPORTANT: use the symmetric HMAC_KEY (Buffer), not the PEM string.
+    console.log('[debug] verify using HS256, key length =', HMAC_KEY.length);
+    const payload = jwt.verify(updateToken, HMAC_KEY, {
       algorithms: ['HS256']
     });
 
     // Mode 1: inline manifest directly inside the token.
     if (payload.manifest && typeof payload.manifest === 'object') {
+      console.log('[debug] using inline manifest from token payload');
       return payload.manifest;
     }
 
@@ -62,6 +44,7 @@ async function verifyAndFetchManifest(updateToken) {
       throw new Error('Invalid manifest URL');
     }
 
+    console.log('[debug] fetching manifest from', manifestUrl);
     const resp = await axios.get(manifestUrl, { timeout: 3000 });
     if (resp.status !== 200) {
       throw new Error('Cannot fetch manifest');
@@ -84,10 +67,6 @@ async function verifyAndFetchManifest(updateToken) {
  *     { "name": "hello", "entry": "hello.js" }
  *   ]
  * }
- *
- * VULNERABILITY:
- *  - Plugins are executed in a powerful vm context with access to require() and process.
- *  - Once integrity is broken, an attacker-controlled plugin can achieve arbitrary code execution.
  */
 async function applyManifest(manifest) {
   const vm = require('vm');
@@ -114,12 +93,15 @@ async function applyManifest(manifest) {
 
     const code = fs.readFileSync(pluginPath, 'utf8');
 
+    // Create a realistic CommonJS-like module object.
+    const moduleObj = { exports: {} };
+
     // Unsafe sandbox with high privileges.
     const sandbox = {
       console,
       require,
-      module: {},
-      exports: {},
+      module: moduleObj,
+      exports: moduleObj.exports,
       process,
       __dirname,
       __filename: pluginPath
@@ -131,11 +113,14 @@ async function applyManifest(manifest) {
       timeout: 1000
     });
 
-    if (typeof sandbox.module.exports?.init === 'function') {
-      sandbox.module.exports.init();
+    const exported = moduleObj.exports;
+
+    if (typeof exported?.init === 'function') {
+      exported.init();
     }
   }
 }
+
 
 module.exports = {
   verifyAndFetchManifest,

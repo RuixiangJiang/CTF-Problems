@@ -1,11 +1,11 @@
 // test.js
-// Minimal test runner for GitHub Actions. No external test framework is used.
+// Minimal test runner for local / GitHub Actions. No external test framework is used.
 
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
+const { HMAC_KEY } = require('./secrets');
 
 const TARGET_PORT = 4000;
 
@@ -39,17 +39,12 @@ async function main() {
       console.log('Missing token correctly rejected');
     }
 
-    // 3) Forge a token using HS256 with the same symmetric key
-    //    that the server derives from public.pem.
+    // 3) Forge a token using HS256 with the same HMAC_KEY
+    //    that the server is using (derived from public.pem).
     console.log(
-      'Forging update token with inline manifest using public.pem-derived HS256 key...'
+      'Forging update token with inline manifest using derived HS256 key...'
     );
-
-    const publicKeyPem = fs.readFileSync(
-      path.join(__dirname, 'config', 'public.pem'),
-      'utf8'
-    );
-    const hmacKey = crypto.createHash('sha256').update(publicKeyPem).digest();
+    console.log('[debug] signer key length =', HMAC_KEY.length);
 
     const manifest = {
       version: 1,
@@ -61,7 +56,7 @@ async function main() {
       exp: Math.floor(Date.now() / 1000) + 3600
     };
 
-    const token = jwt.sign(payload, hmacKey, {
+    const token = jwt.sign(payload, HMAC_KEY, {
       algorithm: 'HS256'
     });
 
