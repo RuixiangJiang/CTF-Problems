@@ -9,7 +9,7 @@ CORS(app)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 
-FLAG = os.getenv("FLAG", "flag{ruixiang}")
+FLAG = "flag{ruixiang}"
 
 
 def get_db_connection():
@@ -117,5 +117,5 @@ def login():
 
 if __name__ == "__main__":
     init_db()
-    port = int(os.getenv("PORT", "5000"))
+    port = 5000
     app.run(host="0.0.0.0", port=port, debug=True)

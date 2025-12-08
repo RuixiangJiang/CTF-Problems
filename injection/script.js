@@ -1,4 +1,4 @@
-const API_BASE = "https://b5478502-7dfb-497b-9ece-f64984d10534-00-gfc74smfby69.picard.replit.dev";
+const API_BASE = "https://chat.ruixiangj.top/injection";
 
 async function handleLogin(event) {
   event.preventDefault();
